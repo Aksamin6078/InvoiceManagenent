@@ -1,0 +1,39 @@
+﻿@model InvoiceManagenent.DTOs.ProductDto
+
+@{
+    ViewData["Title"] = "Product Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="bi bi-box-seam"></i> Product Details</h4>
+        </div>
+
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3 fw-bold">Product Name</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(model => model.ProductName)</dd>
+
+                <dt class="col-sm-3 fw-bold">Price</dt>
+                <dd class="col-sm-9">@Model.Price.ToString("C")</dd>
+
+                <dt class="col-sm-3 fw-bold">Stock</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(model => model.Stock)</dd>
+
+                <dt class="col-sm-3 fw-bold">Category</dt>
+                <dd class="col-sm-9">@Html.DisplayFor(model => model.CategoryName)</dd>
+            </dl>
+        </div>
+
+        <div class="card-footer text-end">
+            <a asp-action="Edit" asp-route-id="@Model.ProductId" class="btn btn-sm btn-warning me-2">
+                <i class="bi bi-pencil-square"></i> Edit
+            </a>
+            <a asp-action="Index" class="btn btn-sm btn-secondary">
+                <i class="bi bi-arrow-left-circle"></i> Back to List
+            </a>
+        </div>
+    </div>
+</div>

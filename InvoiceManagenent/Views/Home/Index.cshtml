@@ -1,0 +1,180 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    var categoryNames = ViewBag.CategoryNames as List<string>;
+    var productCounts = ViewBag.ProductCounts as List<int>;
+    var monthlyLabels = ViewBag.MonthlySalesLabels as List<string>;
+    var monthlyData = ViewBag.MonthlySalesData as List<decimal>;
+}
+
+<!-- Chart-->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="container mt-4">
+    <h1 class="mb-4 text-center fw-bold">Invoice Management Dashboard</h1>
+
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary h-100 shadow-sm">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <h5 class="card-title"><i class="bi bi-box-seam me-2"></i>Products</h5>
+                    <p class="card-text">View, create, edit, or delete products in your inventory.</p>
+                    <a asp-controller="Products" asp-action="Index" class="btn btn-light mt-3">Go to Products</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-success h-100 shadow-sm">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <h5 class="card-title"><i class="bi bi-tags me-2"></i>Categories</h5>
+                    <p class="card-text">Manage product categories and see associated products.</p>
+                    <a asp-controller="Categories" asp-action="Index" class="btn btn-light mt-3">Go to Categories</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-warning h-100 shadow-sm">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <h5 class="card-title"><i class="bi bi-people me-2"></i>Customers</h5>
+                    <p class="card-text">Add and maintain customers.</p>
+                    <a asp-controller="Customers" asp-action="Index" class="btn btn-light mt-3">View Customers</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-info h-100 shadow-sm">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <h5 class="card-title"><i class="bi bi-receipt me-2"></i>Invoices</h5>
+                    <p class="card-text">Create and manage customer invoices.</p>
+                    <a asp-controller="Invoices" asp-action="Index" class="btn btn-light mt-3">View Invoices</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-danger h-100 shadow-sm">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <h5 class="card-title"><i class="bi bi-bar-chart-line me-2"></i>Reports</h5>
+                    <p class="card-text">View sales reports and inventory statistics.</p>
+                    <a asp-controller="Reports" asp-action="Index" class="btn btn-light mt-3">View Reports</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5 text-center">
+        <div class="col-md-4">
+            <div class="alert alert-primary shadow-sm">
+                <h4>@ViewBag.TotalProducts</h4>
+                <p>Total Products</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="alert alert-success shadow-sm">
+                <h4>@ViewBag.TotalCategories</h4>
+                <p>Total Categories</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="alert @(ViewBag.LowStockProducts > 10 ? "alert-warning" : "alert-danger") shadow-sm">
+                <h4>@ViewBag.LowStockProducts</h4>
+                <p>Products Low in Stock</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Products by Category</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up-arrow me-2"></i>Monthly Sales Trend</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="salesChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Styling -->
+<style>
+    .card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        cursor: pointer;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+    h1 {
+        color: #2c3e50;
+    }
+</style>
+
+<script>
+    const categoryNames = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(categoryNames));
+    const productCounts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(productCounts));
+    const monthlyLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthlyLabels));
+    const monthlyData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthlyData));
+
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'bar',
+        data: {
+            labels: categoryNames,
+            datasets: [{
+                label: 'Number of Products',
+                data: productCounts,
+                backgroundColor: '#007bff'
+            }]
+        },
+        options: {
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('salesChart'), {
+        type: 'line',
+        data: {
+            labels: monthlyLabels,
+            datasets: [{
+                label: 'Sales (in $)',
+                data: monthlyData,
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40,167,69,0.2)',
+                fill: true,
+                tension: 0.3,
+                borderWidth: 2,
+                pointBackgroundColor: '#28a745'
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: value => '$' + value.toLocaleString()
+                    }
+                }
+            }
+        }
+    });
+</script>

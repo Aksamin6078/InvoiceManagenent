@@ -1,0 +1,26 @@
+﻿@model InvoiceManagenent.DTOs.CategoryDto
+@{
+    ViewData["Title"] = "Create Category";
+}
+
+<div class="container mt-4">
+    <h2>Create Category</h2>
+    <hr />
+
+    <form asp-action="Create" method="post">
+        <div class="mb-3">
+            <label asp-for="CatagoryName" class="form-label"></label>
+            <input asp-for="CatagoryName" class="form-control" />
+            <span asp-validation-for="CatagoryName" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-success">Create</button>
+        <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,118 @@
+﻿@model InvoiceManagenent.DTOs.InvoiceDto
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Invoice @Model.InvoiceId</title>
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body {
+            margin: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .invoice-card {
+            padding: 30px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .invoice-header h4 {
+            margin-bottom: 0;
+        }
+
+        .table th, .table td {
+            vertical-align: middle;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        #printButton {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="d-flex justify-content-between mb-4">
+            <h2>Invoice Details</h2>
+            <button id="printButton" class="btn btn-success" onclick="printInvoice()">
+                <i class="bi bi-printer"></i> Print Invoice
+            </button>
+        </div>
+
+        <div class="invoice-card" id="invoiceContent">
+            <!-- Invoice Info -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <h2>Invoice Info</h2>
+                    <p><strong>Invoice No:</strong> @Model.InvoiceId</p>
+                    <p><strong>Date:</strong> @(Model.Date.ToString("yyyy-MM-dd"))</p>
+                </div>
+                <div class="col-md-6">
+                    <h3>Customer Info</h3>
+                    <p><strong>Name:</strong> @Model.CustomerName</p>
+                    <p><strong>Email:</strong> @(string.IsNullOrEmpty(Model.Email) ? "N/A" : Model.Email)</p>
+                    <p><strong>Phone:</strong> @(string.IsNullOrEmpty(Model.PhoneNumber) ? "N/A" : Model.PhoneNumber)</p>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <h5>Invoice Items</h5>
+                @if (Model.Items != null && Model.Items.Any())
+                {
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark">
+                            Total
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td>@item.ProductName</td>
+                                    <td>@item.Quantity</td>
+                                    <td>@(item.UnitPrice.ToString("C"))</td>
+                                    <td>@((item.Quantity * item.UnitPrice).ToString("C"))</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="3" class="text-right">Total:</th>
+                                <th>@(Model.Items.Sum(i => i.Quantity * i.UnitPrice).ToString("C"))</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                }
+                else
+                {
+                    <p>No items for this invoice.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function printInvoice() {
+            var printContents = document.getElementById('invoiceContent').innerHTML;
+            var originalContents = document.body.innerHTML;
+
+            document.body.innerHTML = printContents;
+            window.print();
+            document.body.innerHTML = originalContents;
+        }
+    </script>
+</body>
+</html>

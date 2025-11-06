@@ -1,0 +1,173 @@
+﻿@model InvoiceManagenent.DTOs.InvoiceDto
+
+@{
+    ViewData["Title"] = "Create Invoice";
+    var products = ViewBag.Products; 
+    var customers = ViewBag.Customers as SelectList;
+}
+
+<h2>Create Invoice</h2>
+
+<form asp-action="Create" method="post" id="invoice-form">
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4>Customer Information</h4>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="toggleNewCustomerBtn">+ Add New Customer</button>
+        </div>
+
+        <div class="card-body row" id="existingCustomerSection">
+            <div class="col-md-6 mb-3">
+                <label asp-for="CustomerId" class="form-label">Select Customer</label>
+                <select asp-for="CustomerId" class="form-select" asp-items="customers">
+                    <option value="">-- Select Customer --</option>
+                </select>
+                <span asp-validation-for="CustomerId" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="card-body row d-none" id="newCustomerSection">
+            <div class="col-md-6 mb-3">
+                <label asp-for="CustomerName" class="form-label">Customer Name</label>
+                <input asp-for="CustomerName" class="form-control" />
+                <span asp-validation-for="CustomerName" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                <input asp-for="PhoneNumber" class="form-control" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="card-body row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="Date" class="form-label">Invoice Date</label>
+                <input asp-for="Date" type="date" class="form-control" />
+                <span asp-validation-for="Date" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>Invoice Items</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered align-middle" id="invoice-items-table">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 35%;">Product</th>
+                        <th style="width: 15%;">Qty</th>
+                        <th style="width: 20%;">Unit Price</th>
+                        <th style="width: 20%;">Total</th>
+                        <th style="width: 10%;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+                <div class="d-flex justify-content-end align-items-center mt-3">
+                    <h5 class="me-3">Grand Total:</h5>
+                    <input type="text" id="grandTotal" class="form-control text-end" style="width:150px;" readonly value="0.00" />
+                </div>
+
+            <button type="button" class="btn btn-secondary" id="add-item-btn">+ Add Item</button>
+        </div>
+    </div>
+
+    <div class="text-end">
+        <button type="submit" class="btn btn-primary">Create Invoice</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        const toggleBtn = document.getElementById('toggleNewCustomerBtn');
+        const existingSection = document.getElementById('existingCustomerSection');
+        const newSection = document.getElementById('newCustomerSection');
+
+        toggleBtn.addEventListener('click', () => {
+            existingSection.classList.toggle('d-none');
+            newSection.classList.toggle('d-none');
+            const isAddingNew = !newSection.classList.contains('d-none');
+            toggleBtn.textContent = isAddingNew ? '← Select Existing Customer' : '+ Add New Customer';
+
+            if (isAddingNew) document.querySelector('select[name="CustomerId"]').value = '';
+            else {
+                document.querySelector('input[name="CustomerName"]').value = '';
+                document.querySelector('input[name="Email"]').value = '';
+                document.querySelector('input[name="PhoneNumber"]').value = '';
+            }
+        });
+
+        let itemIndex = 0;
+        const products = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(products));
+        const tableBody = document.querySelector('#invoice-items-table tbody');
+
+        function calculateGrandTotal() {
+            let total = 0;
+            tableBody.querySelectorAll('tr').forEach(row => {
+                const rowTotal = parseFloat(row.querySelector('input[name*="Total"]').value) || 0;
+                total += rowTotal;
+            });
+            document.getElementById('grandTotal').value = total.toFixed(2);
+        }
+
+        function addItemRow() {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <select name="Items[${itemIndex}].ProductId" class="form-select product-select">
+                        <option value="">-- Select Product --</option>
+                        ${products.map(p => `<option value="${p.value}" data-price="${p.price}">${p.text}</option>`).join('')}
+                    </select>
+                </td>
+                <td><input name="Items[${itemIndex}].Quantity" type="number" class="form-control text-center" min="1" value="1" /></td>
+                <td><input name="Items[${itemIndex}].UnitPrice" type="number" class="form-control text-end" step="0.01" min="0" value="0" /></td>
+                <td><input name="Items[${itemIndex}].Total" type="text" class="form-control text-end" readonly value="0.00" /></td>
+                <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-item-btn">✖</button></td>
+            `;
+            tableBody.appendChild(row);
+            itemIndex++;
+        }
+
+        document.getElementById('add-item-btn').addEventListener('click', addItemRow);
+
+        tableBody.addEventListener('click', e => {
+            if (e.target.classList.contains('remove-item-btn')) {
+                e.target.closest('tr').remove();
+                calculateGrandTotal();
+            }
+        });
+
+        tableBody.addEventListener('input', e => {
+            if (e.target.name.includes("Quantity") || e.target.name.includes("UnitPrice")) {
+                const row = e.target.closest('tr');
+                const qty = parseFloat(row.querySelector('input[name*="Quantity"]').value) || 0;
+                const price = parseFloat(row.querySelector('input[name*="UnitPrice"]').value) || 0;
+                row.querySelector('input[name*="Total"]').value = (qty * price).toFixed(2);
+                calculateGrandTotal();
+            }
+        });
+
+        tableBody.addEventListener('change', e => {
+            if (e.target.classList.contains('product-select')) {
+                const selectedOption = e.target.selectedOptions[0];
+                const price = parseFloat(selectedOption.dataset.price) || 0;
+                const row = e.target.closest('tr');
+                const qty = parseFloat(row.querySelector('input[name*="Quantity"]').value) || 0;
+                row.querySelector('input[name*="UnitPrice"]').value = price.toFixed(2);
+                row.querySelector('input[name*="Total"]').value = (qty * price).toFixed(2);
+                calculateGrandTotal();
+            }
+        });
+    </script>
+}
